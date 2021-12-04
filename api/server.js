@@ -51,12 +51,14 @@ const pikminData = [
 ];
 
 const app = express();
+app.use(express.json());
+
 const client = new line.Client(config);
 
 app.get('/', (req, res) => res.send('Hello LINE BOT!(GET)')); //ブラウザ確認用(無くても問題ない)
 app.post('/ifttt', async (req, res) => {
-  const totalStep = parseInt(5000 + Math.random() * 10000); // test用
-  // const totalStep = req.query.totalStep;
+  // const totalStep = parseInt(5000 + Math.random() * 10000); // test用
+  const totalStep = req.body.totalStep;
   console.log('totalStep = ' + totalStep);
 
   let index = 0;
