@@ -51,11 +51,47 @@ const pikminData = [
 ];
 
 const app = express();
-app.use(express.json());
 
 const client = new line.Client(config);
 
 app.get('/', (req, res) => res.send('Hello LINE BOT!(GET)')); //ブラウザ確認用(無くても問題ない)
+
+// 以下replay message用　userIDも調べられる
+app.post('/webhook', line.middleware(config), (req, res) => {
+  console.log(req.body.events);
+
+  if (req.body.events.length == 0) {
+    res.send('Hello LINE BOT!(POST)');
+    console.log('疎通確認用');
+    return;
+  }
+
+  Promise.all(req.body.events.map(handleEvent)).then((result) =>
+    res.json(result)
+  );
+});
+async function handleEvent(event) {
+  if (event.type !== 'message' || event.message.type !== 'text') {
+    return Promise.resolve(null);
+  }
+  console.log(event.source.userId);
+  for (let i = 0; i < pikminData.length; i++) {
+    if (pikminData[i].type == event.message.text) {
+      return client.replyMessage(event.replyToken, {
+        'type': 'image',
+        'originalContentUrl': pikminData[i].pikminImg,
+        'previewImageUrl': pikminData[i].pikminImg
+      });
+    }
+  }
+
+  // オウム返し
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: event.message.text, //実際に返信の言葉を入れる箇所
+  });
+}
+app.use(express.json());
 app.post('/ifttt', async (req, res) => {
   // const totalStep = parseInt(5000 + Math.random() * 10000); // test用
   const totalStep = req.body.totalStep;
@@ -94,41 +130,6 @@ app.post('/ifttt', async (req, res) => {
   res.send('ifttt post');
 });
 
-// 以下replay message用　userIDも調べられる
-app.post('/webhook', line.middleware(config), (req, res) => {
-  console.log(req.body.events);
-
-  if (req.body.events.length == 0) {
-    res.send('Hello LINE BOT!(POST)');
-    console.log('疎通確認用');
-    return;
-  }
-
-  Promise.all(req.body.events.map(handleEvent)).then((result) =>
-    res.json(result)
-  );
-});
-async function handleEvent(event) {
-  if (event.type !== 'message' || event.message.type !== 'text') {
-    return Promise.resolve(null);
-  }
-  console.log(event.source.userId);
-  for (let i = 0; i < pikminData.length; i++) {
-    if (pikminData[i].type == event.message.text) {
-      return client.replyMessage(event.replyToken, {
-        'type': 'image',
-        'originalContentUrl': pikminData[i].pikminImg,
-        'previewImageUrl': pikminData[i].pikminImg
-      });
-    }
-  }
-
-  // オウム返し
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: event.message.text, //実際に返信の言葉を入れる箇所
-  });
-}
 
 // app.listen(PORT);
 // console.log(`Server running at ${PORT}`);
