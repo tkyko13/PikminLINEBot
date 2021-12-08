@@ -94,7 +94,7 @@ async function handleEvent(event) {
 app.use(express.json());
 app.post('/ifttt', async (req, res) => {
   // const totalStep = parseInt(5000 + Math.random() * 10000); // test用
-  const totalStep = req.body.totalStep;
+  const totalStep = req.query.totalStep;
   console.log('totalStep = ' + totalStep);
 
   let index = 0;
